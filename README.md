@@ -33,11 +33,14 @@ make clean  # Removes compiled files
 
 ### Client (sendFile)
 
-``` for testing smallTest.txt file:
+# For testing smallTest.txt file:
+
+``` 
 gcc -Wall -g -o sendFile client.c
 ./sendFile smallTest.txt localhost:8080 4096  
 ```
-``` for testing wonderland.txt file:
+# For testing wonderland.txt file:
+``` 
 gcc -Wall -g -o sendFile client.c
 ./sendFile wonderland.txt localhost:8080 4096  
 ```
