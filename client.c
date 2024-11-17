@@ -3,121 +3,68 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
 
-#define DEFAULT_BUFFER_SIZE 4096
-
-void print_usage(char *program_name) 
+int main(int argc, char *argv[])
 {
-    printf("Usage: %s fileName hostname:port-number [bufSize]\n", program_name);
-}
-
-int main(int argc, char *argv[]) 
-{
-    if (argc < 3 || argc > 4) 
+    if (argc != 2)
     {
-        print_usage(argv[0]);
+        printf("Usage: %s filename\n", argv[0]);
         return 1;
     }
 
-    // Parse arguments
-    char *filename = argv[1];
-    char *hostname_port = argv[2];
-    char hostname[256];
-    int port;
-
-    // Parse hostname:port
-    char *colon = strchr(hostname_port, ':');
-    if (colon == NULL) {
-        printf("Invalid hostname:port-number format\n");
-        return 1;
-    }
-
-    int hostname_length = colon - hostname_port;
-    strncpy(hostname, hostname_port, hostname_length);
-    hostname[hostname_length] = '\0';
-    port = atoi(colon + 1);
-
-    int buffer_size = (argc == 4) ? atoi(argv[3]) : DEFAULT_BUFFER_SIZE;
-
-    // Resolve hostname to the IP address
-    struct addrinfo hints = {0}, *res;
-    hints.ai_family = AF_INET; 
-    hints.ai_socktype = SOCK_STREAM; 
-
-    // Changing from port to string
-    char port_str[6];
-    snprintf(port_str, sizeof(port_str), "%d", port); 
-
-    printf("Finding address for hostname '%s'...\n", hostname);
-    if (getaddrinfo(hostname, port_str, &hints, &res) != 0) {
-        perror("Failed to resolve hostname");
-        return 1;
-    }
-
-    printf("Connecting to server at '%s:%d'...\n", hostname, port);
-
-    // Print that a successful connection
-    //is shown to user otherwise show error
-    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket == -1) {
-        perror("Socket creation failed");
-        freeaddrinfo(res);
-        return 1;
-    }
-    freeaddrinfo(res);
-
-    printf("Connection is successful!\n");
-
-    // Open the file to read it
-    FILE *file = fopen(filename, "rb");
-    // If the file is empty, display the "failed to open file" message
-    if (file == NULL) 
+    // Open the file to send
+    FILE *file = fopen(argv[1], "rb");
+    if (!file)
     {
-        perror("Failed to open the file");
-        close(client_socket);
+        perror("Cannot open file");
         return 1;
     }
 
-    // Print messages to uset about sending specific filename
-    // and if its sent successfully
-    printf("Sending filename '%s'...\n", filename);
-    printf("Filename sent successfully\n");
+    // Get file size
+    struct stat st;
+    stat(argv[1], &st);
+    uint64_t file_size = st.st_size;
 
-    // Sending the file size
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    // Create socket
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
 
-    // Print messages to uset about sending specific filename
-    // and if its sent successfully
-    printf("Sending file size %ld...\n", file_size);
-    printf("File size sent successfully\n");
+    // Connect to server (localhost:8080)
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
 
-    // Sending file data in chunks
-    printf("Sending file data...\n");
-    char *buffer = malloc(buffer_size);
-    // If the buffer is null, display message that it failed
-    if (buffer == NULL) 
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
-        perror("Failed to allocate buffer");
-        fclose(file);
-        close(client_socket);
+        perror("Connect failed");
         return 1;
     }
 
-    size_t bytes_read, total_sent = 0;
-    while ((bytes_read = fread(buffer, 1, buffer_size, file)) > 0) {
-        // Print to user
-        printf("Sent %zu bytes of data\n", bytes_read);
-        total_sent += bytes_read;
+    // Send filename length
+    uint32_t name_len = strlen(argv[1]);
+    name_len = htonl(name_len); // Convert to network byte order
+    send(sock, &name_len, sizeof(name_len), 0);
+
+    // Send filename
+    send(sock, argv[1], strlen(argv[1]), 0);
+
+    // Send file size
+    uint64_t net_file_size = htobe64(file_size); // Convert to network byte order
+    send(sock, &net_file_size, sizeof(net_file_size), 0);
+
+    // Send file content
+    char buffer[4096];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0)
+    {
+        send(sock, buffer, bytes_read, 0);
     }
 
-    printf("File '%s' sent successfully (%ld bytes)\n", filename, total_sent);
-
-    // Clean-up and close file
-    free(buffer);
     fclose(file);
-    close(client_socket);
+    close(sock);
     return 0;
 }
