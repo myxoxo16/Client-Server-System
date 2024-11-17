@@ -1,3 +1,0 @@
-This is a small file.
-- Bullet point 1
-- Bullet point 2
