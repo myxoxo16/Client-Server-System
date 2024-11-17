@@ -1,9 +1,0 @@
----
-triple:          'x86_64-apple-darwin'
-binary-path:     server
-relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _print_usage, symObjAddr: 0x0, symBinAddr: 0x100003C40, symSize: 0x40 }
-  - { offsetInCU: 0x82, offset: 0x82, size: 0x8, addend: 0x0, symName: _print_usage, symObjAddr: 0x0, symBinAddr: 0x100003C40, symSize: 0x40 }
-  - { offsetInCU: 0xA6, offset: 0xA6, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x40, symBinAddr: 0x100003C80, symSize: 0x1F0 }
-  - { offsetInCU: 0x114, offset: 0x114, size: 0x8, addend: 0x0, symName: __OSSwapInt16, symObjAddr: 0x230, symBinAddr: 0x100003E70, symSize: 0x20 }
-...
