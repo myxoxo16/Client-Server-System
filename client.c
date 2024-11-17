@@ -10,18 +10,40 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4) // Expect filename, server IP, and port
+    if (argc != 4) // Expect filename, IP-address:port-number, bufSize
     {
-        printf("Usage: %s <filename> <server IP> <port>\n", argv[0]);
+        printf("Usage: %s <filename> <IP-address:port-number> <bufSize>\n", argv[0]);
         return 1;
     }
 
     // Extract arguments
     char *filename = argv[1];
-    char *server_ip = argv[2];
-    int port = atoi(argv[3]);
+    char *ip_port = argv[2];
+    int bufSize = atoi(argv[3]); // Buffer size
+
+    if (bufSize <= 0)
+    {
+        fprintf(stderr, "Invalid buffer size: %d\n", bufSize);
+        return 1;
+    }
+
+    // Split IP and port from ip_port (e.g., "127.0.0.1:8080")
+    char *server_ip = strtok(ip_port, ":");
+    char *port_str = strtok(NULL, ":");
+    if (!server_ip || !port_str)
+    {
+        fprintf(stderr, "Invalid IP-address:port-number format: %s\n", argv[2]);
+        return 1;
+    }
+    int port = atoi(port_str);
+    if (port <= 0 || port > 65535)
+    {
+        fprintf(stderr, "Invalid port number: %s\n", port_str);
+        return 1;
+    }
 
     // Open the file to send
+    printf("Opening file '%s'...\n", filename);
     FILE *file = fopen(filename, "rb");
     if (!file)
     {
@@ -38,8 +60,10 @@ int main(int argc, char *argv[])
         return 1;
     }
     uint64_t file_size = st.st_size;
+    printf("File size: %lu bytes\n", file_size);
 
     // Create socket
+    printf("Creating socket...\n");
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
@@ -48,29 +72,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Connect to server
+    // Configure server address
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
 
-    int result = inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
-    if (result == 0)
+    printf("Parsing server IP address '%s'...\n", server_ip);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0)
     {
         fprintf(stderr, "Invalid server IP address format: %s\n", server_ip);
         close(sock);
         fclose(file);
         return 1;
     }
-    else if (result < 0)
-    {
-        perror("inet_pton failed");
-        close(sock);
-        fclose(file);
-        return 1;
-    }
 
-    printf("Attempting to connect to server %s:%d...\n", server_ip, port);
+    // Connect to server
+    printf("Connecting to server %s:%d...\n", server_ip, port);
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
         perror("Connect failed");
@@ -111,13 +129,23 @@ int main(int argc, char *argv[])
     }
 
     // Send file content
-    char buffer[4096];
+    printf("Sending file data...\n");
+    char *buffer = malloc(bufSize);
+    if (!buffer)
+    {
+        fprintf(stderr, "Failed to allocate buffer of size %d\n", bufSize);
+        close(sock);
+        fclose(file);
+        return 1;
+    }
+
     size_t bytes_read;
-    while ((bytes_read = fread(buffer, 1, sizeof(buffer), file)) > 0)
+    while ((bytes_read = fread(buffer, 1, bufSize, file)) > 0)
     {
         if (send(sock, buffer, bytes_read, 0) < 0)
         {
             perror("Error sending file data");
+            free(buffer);
             close(sock);
             fclose(file);
             return 1;
@@ -126,6 +154,7 @@ int main(int argc, char *argv[])
 
     printf("File '%s' sent successfully (%lu bytes)\n", filename, file_size);
 
+    free(buffer);
     fclose(file);
     close(sock);
     return 0;
