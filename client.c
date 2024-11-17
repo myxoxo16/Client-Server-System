@@ -41,7 +41,18 @@ int main(int argc, char *argv[])
 
     // Create socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
+<<<<<<< HEAD
     if (sock < 0)
+=======
+
+    // Connect to server (localhost:8080) get ip port, buffer size from command line
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+
+    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+>>>>>>> ee35470433494c6f988f38938edbd72a30ab835b
     {
         perror("Socket creation failed");
         fclose(file);
@@ -124,8 +135,11 @@ int main(int argc, char *argv[])
         }
     }
 
+<<<<<<< HEAD
     printf("File '%s' sent successfully (%lu bytes)\n", filename, file_size);
 
+=======
+>>>>>>> ee35470433494c6f988f38938edbd72a30ab835b
     fclose(file);
     close(sock);
     return 0;
