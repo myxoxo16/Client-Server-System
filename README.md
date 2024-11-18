@@ -33,14 +33,14 @@ make clean  # Removes compiled files
 
 ### Client (sendFile)
 
-#### For testing smallTest.txt file:
+#### For testing smallTest.txt file without bufsize (first line) and with bufsize (second line) below:
 
-``` 
-gcc -Wall -g -o sendFile client.c
-./sendFile smallTest.txt localhost:8080 4096  
 ```
-#### For testing wonderland.txt file:
+./sendFile smallTest.txt localhost:8080 
+./sendFile smallTest.txt localhost:8080 4096
+```
+#### For testing wonderland.txt file without bufsize (first line) and with bufsize (second line) below:
 ``` 
-gcc -Wall -g -o sendFile client.c
-./sendFile wonderland.txt localhost:8080 4096  
+./sendFile wonderland.txt 127.0.0.1:8080
+./sendFile wonderland.txt 127.0.0.1:8080 4096
 ```
