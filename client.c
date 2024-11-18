@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     //but the buffer size as argv3 for flexibility
     char *filename = argv[1];
     char *ip_port = argv[2];
+    
     int bufSize = atoi(argv[3]); 
 
     if (bufSize <= 0)
@@ -34,12 +35,14 @@ int main(int argc, char *argv[])
     //Strtok function to split strings to get correct format for the client command line
     char *server_ip = strtok(ip_port, ":");
     char *port_str = strtok(NULL, ":");
+    
     if (!server_ip || !port_str)
     {
         //Display message to user
         fprintf(stderr, "Invalid IP-address:port-number format: %s\n", argv[2]);
         return 1;
     }
+    
     int port = atoi(port_str);
     if (port <= 0 || port > 65535)
     {
@@ -60,6 +63,7 @@ int main(int argc, char *argv[])
 
     //Get the size of the file
     struct stat st;
+    
     if (stat(filename, &st) != 0)
     {
         //Let user know that it cannot get the file size and close the 
@@ -71,7 +75,6 @@ int main(int argc, char *argv[])
     //Put the file in bytes format and print message to user
     uint64_t file_size = st.st_size;
     printf("File size: %lu bytes\n", file_size);
-
     //Make socket
     printf("Creating socket...\n");
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -97,6 +100,7 @@ int main(int argc, char *argv[])
     
     if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0)
     {
+        //Print message to user
         fprintf(stderr, "Invalid server IP address format: %s\n", server_ip);
         close(sock);
         fclose(file);
