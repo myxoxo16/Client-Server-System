@@ -1,0 +1,270 @@
+
+=== Server Started ===
+Time: Sun Nov 17 23:43:34 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:39 2024
+Original filename: wonderland.txt
+Saved as: wonderland(2).txt
+Size: 169855 bytes
+Transfer time: 0.000314 seconds
+Transfer rate: 528158.62 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:40 2024
+Original filename: wonderland.txt
+Saved as: wonderland(3).txt
+Size: 169855 bytes
+Transfer time: 0.000329 seconds
+Transfer rate: 504665.69 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:40 2024
+Original filename: wonderland.txt
+Saved as: wonderland(4).txt
+Size: 169855 bytes
+Transfer time: 0.000353 seconds
+Transfer rate: 470061.87 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:41 2024
+Original filename: wonderland.txt
+Saved as: wonderland(5).txt
+Size: 169855 bytes
+Transfer time: 0.000332 seconds
+Transfer rate: 500190.05 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:41 2024
+Original filename: wonderland.txt
+Saved as: wonderland(6).txt
+Size: 169855 bytes
+Transfer time: 0.000472 seconds
+Transfer rate: 351114.10 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:42 2024
+Original filename: wonderland.txt
+Saved as: wonderland(7).txt
+Size: 169855 bytes
+Transfer time: 0.000336 seconds
+Transfer rate: 493142.85 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:42 2024
+Original filename: wonderland.txt
+Saved as: wonderland(8).txt
+Size: 169855 bytes
+Transfer time: 0.000340 seconds
+Transfer rate: 487418.93 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:43 2024
+Original filename: wonderland.txt
+Saved as: wonderland(9).txt
+Size: 169855 bytes
+Transfer time: 0.000330 seconds
+Transfer rate: 502449.10 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:44 2024
+Original filename: wonderland.txt
+Saved as: wonderland(10).txt
+Size: 169855 bytes
+Transfer time: 0.000493 seconds
+Transfer rate: 336791.16 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:44 2024
+Original filename: wonderland.txt
+Saved as: wonderland(11).txt
+Size: 169855 bytes
+Transfer time: 0.000410 seconds
+Transfer rate: 404371.56 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:45 2024
+Original filename: wonderland.txt
+Saved as: wonderland(12).txt
+Size: 169855 bytes
+Transfer time: 0.000347 seconds
+Transfer rate: 478573.41 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:45 2024
+Original filename: wonderland.txt
+Saved as: wonderland(13).txt
+Size: 169855 bytes
+Transfer time: 0.000424 seconds
+Transfer rate: 391099.79 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:46 2024
+Original filename: wonderland.txt
+Saved as: wonderland(14).txt
+Size: 169855 bytes
+Transfer time: 0.000489 seconds
+Transfer rate: 338993.70 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:46 2024
+Original filename: wonderland.txt
+Saved as: wonderland(15).txt
+Size: 169855 bytes
+Transfer time: 0.000335 seconds
+Transfer rate: 495573.86 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:47 2024
+Original filename: wonderland.txt
+Saved as: wonderland(16).txt
+Size: 169855 bytes
+Transfer time: 0.000534 seconds
+Transfer rate: 310550.49 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:48 2024
+Original filename: wonderland.txt
+Saved as: wonderland(17).txt
+Size: 169855 bytes
+Transfer time: 0.000450 seconds
+Transfer rate: 368279.94 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:48 2024
+Original filename: wonderland.txt
+Saved as: wonderland(18).txt
+Size: 169855 bytes
+Transfer time: 0.000418 seconds
+Transfer rate: 396630.44 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:49 2024
+Original filename: wonderland.txt
+Saved as: wonderland(19).txt
+Size: 169855 bytes
+Transfer time: 0.000400 seconds
+Transfer rate: 414191.14 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:49 2024
+Original filename: wonderland.txt
+Saved as: wonderland(20).txt
+Size: 169855 bytes
+Transfer time: 0.000381 seconds
+Transfer rate: 435476.90 KB/s
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:43:50 2024
+Original filename: wonderland.txt
+Saved as: wonderland(21).txt
+Size: 169855 bytes
+Transfer time: 0.000328 seconds
+Transfer rate: 506204.26 KB/s
+
+=== Transfer Statistics Summary ===
+Number of transfers: 20
+Transfer Time (seconds):
+  Min: 0.000314
+  Max: 0.000534
+  Avg: 0.000391
+Transfer Rate (KB/s):
+  Min: 310550.49
+  Max: 528158.62
+  Avg: 435696.89
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:44:01 2024
+
+=== Server Started ===
+Time: Sun Nov 17 23:51:13 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:51:55 2024
+
+=== Server Started ===
+Time: Sun Nov 17 23:52:50 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:52:52 2024
+Original filename: wonderland.txt
+Saved as: wonderland(2).txt
+Size: 169855 bytes
+Transfer time: 0.000391 seconds
+Transfer rate: 424521.22 KB/s
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:53:11 2024
+
+=== Transfer Statistics Summary ===
+Number of transfers: 1
+Transfer Time (seconds):
+  Min: 0.000391
+  Max: 0.000391
+  Avg: 0.000391
+Transfer Rate (KB/s):
+  Min: 424521.22
+  Max: 424521.22
+  Avg: 424521.22
+
+=== Server Started ===
+Time: Sun Nov 17 23:53:14 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:53:47 2024
+
+=== Server Started ===
+Time: Sun Nov 17 23:54:13 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:54:27 2024
+
+=== Server Started ===
+Time: Sun Nov 17 23:55:12 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:56:49 2024
+
+=== Server Started ===
+Time: Sun Nov 17 23:57:57 2024
+Port: 8080
+Buffer Size: 4096 bytes
+
+=== Transfer Complete ===
+Time: Sun Nov 17 23:58:01 2024
+Original filename: smallTest.txt
+Saved as: smallTest(2).txt
+Size: 55 bytes
+Transfer time: 0.000023 seconds
+Transfer rate: 2340.35 KB/s
+
+=== Server Shutdown ===
+Time: Sun Nov 17 23:59:37 2024
+
+=== Transfer Statistics Summary ===
+Number of transfers: 1
+Transfer Time (seconds):
+  Min: 0.000023
+  Max: 0.000023
+  Avg: 0.000023
+Transfer Rate (KB/s):
+  Min: 2340.35
+  Max: 2340.35
+  Avg: 2340.35
+
+=== Server Started ===
+Time: Mon Nov 18 00:00:08 2024
+Port: 8080
+Buffer Size: 4096 bytes

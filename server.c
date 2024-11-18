@@ -9,87 +9,163 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdint.h>
+#include <time.h>
 
 #define DEFAULT_BUFFER_SIZE 4096
-static int server_socket; // For signal handling
+#define LOG_FILE "server_log.txt"
+#define STATS_COUNT 20
 
-/* Signal handler to cleanup on ctrl+c */
+static int server_socket;
+
+// Simple structure for transfer statistics
+struct transfer_stats
+{
+	double time;
+	double rate;
+	size_t size;
+};
+
+static struct transfer_stats stats_history[STATS_COUNT];
+static int stats_count = 0;
+
 static void handle_signal(int sig)
 {
 	printf("\nReceived signal %d, shutting down...\n", sig);
+
+	// Log final statistics
+	FILE *log_file = fopen(LOG_FILE, "a");
+	if (log_file != NULL)
+	{
+		time_t current_time;
+		time(&current_time);
+		fprintf(log_file, "\n=== Server Shutdown ===\n");
+		fprintf(log_file, "Time: %s", ctime(&current_time));
+		log_transfer_summary(log_file);
+		fclose(log_file);
+	}
+
 	close(server_socket);
 	exit(0);
 }
 
-/* Handles duplicate filenames by appending (2), (3), etc. */
-char *get_unique_filename(const char *original_filename)
+// Add transfer statistics to history
+void add_transfer_stat(double transfer_time, double rate, size_t size)
 {
-	char *new_filename = strdup(original_filename);
-	char *ext = strrchr(new_filename, '.');
-	char base[256];
-	char extension[32] = "";
-
-	// Split filename into base and extension
-	if (ext != NULL)
+	if (stats_count == STATS_COUNT)
 	{
-		strncpy(extension, ext, sizeof(extension) - 1);
-		*ext = '\0';
-		strncpy(base, new_filename, sizeof(base) - 1);
+		memmove(&stats_history[0], &stats_history[1],
+				sizeof(struct transfer_stats) * (STATS_COUNT - 1));
+		stats_count--;
+	}
+	stats_history[stats_count].time = transfer_time;
+	stats_history[stats_count].rate = rate;
+	stats_history[stats_count].size = size;
+	stats_count++;
+}
+
+// Log transfer summary statistics
+void log_transfer_summary(FILE *log_file)
+{
+	if (stats_count == 0)
+		return;
+
+	double min_time = stats_history[0].time;
+	double max_time = stats_history[0].time;
+	double total_time = 0;
+	double min_rate = stats_history[0].rate;
+	double max_rate = stats_history[0].rate;
+	double total_rate = 0;
+
+	for (int i = 0; i < stats_count; i++)
+	{
+		// Update min/max time
+		if (stats_history[i].time < min_time)
+			min_time = stats_history[i].time;
+		if (stats_history[i].time > max_time)
+			max_time = stats_history[i].time;
+		total_time += stats_history[i].time;
+
+		// Update min/max rate
+		if (stats_history[i].rate < min_rate)
+			min_rate = stats_history[i].rate;
+		if (stats_history[i].rate > max_rate)
+			max_rate = stats_history[i].rate;
+		total_rate += stats_history[i].rate;
+	}
+
+	fprintf(log_file, "\n=== Transfer Statistics Summary ===\n");
+	fprintf(log_file, "Number of transfers: %d\n", stats_count);
+	fprintf(log_file, "Transfer Time (seconds):\n");
+	fprintf(log_file, "  Min: %.6f\n", min_time);
+	fprintf(log_file, "  Max: %.6f\n", max_time);
+	fprintf(log_file, "  Avg: %.6f\n", total_time / stats_count);
+	fprintf(log_file, "Transfer Rate (KB/s):\n");
+	fprintf(log_file, "  Min: %.2f\n", min_rate);
+	fprintf(log_file, "  Max: %.2f\n", max_rate);
+	fprintf(log_file, "  Avg: %.2f\n", total_rate / stats_count);
+}
+
+// Get unique filename by appending (2), (3), etc.
+char *get_unique_filename(const char *original)
+{
+	char base[256], ext[32] = "", temp[512];
+	const char *dot = strrchr(original, '.');
+
+	if (dot)
+	{
+		int base_len = dot - original;
+		strncpy(base, original, base_len);
+		base[base_len] = '\0';
+		strcpy(ext, dot);
 	}
 	else
 	{
-		strncpy(base, new_filename, sizeof(base) - 1);
+		strcpy(base, original);
 	}
 
-	// Try to open the file to check if it exists
-	FILE *file = fopen(original_filename, "r");
-	if (file == NULL)
+	// Try original filename first
+	if (access(original, F_OK) != 0)
 	{
-		// File doesn't exist, use original name
-		free(new_filename);
-		return strdup(original_filename);
+		return strdup(original);
 	}
-	fclose(file);
 
-	// File exists, try with numbers
-	int counter = 2;
-	char temp[512];
-	do
+	// Try with numbers
+	for (int i = 2; i < 100; i++)
 	{
-		snprintf(temp, sizeof(temp), "%s(%d)%s", base, counter, extension);
-		file = fopen(temp, "r");
-		if (file == NULL)
+		snprintf(temp, sizeof(temp), "%s(%d)%s", base, i, ext);
+		if (access(temp, F_OK) != 0)
 		{
-			// Found a unique name
-			free(new_filename);
 			return strdup(temp);
 		}
-		fclose(file);
-		counter++;
-	} while (counter < 100); // Limit to prevent infinite loop
-
-	free(new_filename);
+	}
 	return NULL;
 }
 
-/* Print program usage information */
-void print_usage(char *program_name)
+// Log transfer statistics (renamed parameter from 'time' to 'transfer_time')
+void log_stats(FILE *log_file, double transfer_time, double rate,
+			   const char *filename, size_t size, const char *saved_as)
 {
-	printf("Usage: %s port-number [bufSize]\n", program_name);
-	printf("  port-number: Port to listen on\n");
-	printf("  bufSize: Optional buffer size (default: 4096)\n");
+	time_t current_time;
+	time(&current_time);
+
+	fprintf(log_file, "\n=== Transfer Complete ===\n");
+	fprintf(log_file, "Time: %s", ctime(&current_time));
+	fprintf(log_file, "Original filename: %s\n", filename);
+	fprintf(log_file, "Saved as: %s\n", saved_as);
+	fprintf(log_file, "Size: %lu bytes\n", size);
+	fprintf(log_file, "Transfer time: %.6f seconds\n", transfer_time);
+	fprintf(log_file, "Transfer rate: %.2f KB/s\n", rate);
 }
 
 int main(int argc, char *argv[])
 {
-	// Validate command line arguments
+	// Check command line arguments
 	if (argc < 2 || argc > 3)
 	{
-		print_usage(argv[0]);
+		printf("Usage: %s port-number [bufSize]\n", argv[0]);
 		return 1;
 	}
 
-	// Parse arguments
 	int port = atoi(argv[1]);
 	int buffer_size = (argc == 3) ? atoi(argv[2]) : DEFAULT_BUFFER_SIZE;
 
@@ -99,14 +175,13 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Setup signal handling for clean shutdown
-	struct sigaction sa;
-	memset(&sa, 0, sizeof(sa));
+	// Set up signal handling
+	struct sigaction sa = {0};
 	sa.sa_handler = handle_signal;
 	sigaction(SIGINT, &sa, NULL);
 	sigaction(SIGTERM, &sa, NULL);
 
-	// Socket setup and configuration
+	// Create and configure socket
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_socket == -1)
 	{
@@ -114,23 +189,16 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Set socket options
+	// Allow socket reuse
 	int flag = 1;
-	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)) == -1)
-	{
-		perror("setsockopt() failed");
-		close(server_socket);
-		return 1;
-	}
+	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
-	// Set up server address structure
-	struct sockaddr_in server_addr;
-	memset(&server_addr, 0, sizeof(server_addr));
+	// Bind socket
+	struct sockaddr_in server_addr = {0};
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	server_addr.sin_port = htons(port);
 
-	// Bind socket
 	if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 	{
 		perror("Bind failed");
@@ -147,162 +215,147 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Server listening on port %d\n", port);
+	// After socket setup and before the main loop:
+	FILE *log_file = fopen(LOG_FILE, "a");
+	if (log_file != NULL)
+	{
+		time_t current_time;
+		time(&current_time);
+		fprintf(log_file, "\n=== Server Started ===\n");
+		fprintf(log_file, "Time: %s", ctime(&current_time));
+		fprintf(log_file, "Port: %d\n", port);
+		fprintf(log_file, "Buffer Size: %d bytes\n", buffer_size);
+		fclose(log_file);
+	}
 
-	struct sockaddr_in client_addr;
-	socklen_t client_len = sizeof(client_addr);
-
-	// Main server loop - handle clients sequentially
+	// Main server loop
 	while (1)
 	{
-		// Wait for and accept client connection
-		printf("Waiting for connections...\n");
+		struct sockaddr_in client_addr;
+		socklen_t client_len = sizeof(client_addr);
 
-		// Accept connection
+		printf("Waiting for connections...\n");
 		int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
 		if (client_socket < 0)
 		{
 			perror("Accept failed");
-			continue; // Continue listening for other connections
+			continue;
 		}
 
-		// Print client information
 		printf("Connection from %s:%d\n",
 			   inet_ntoa(client_addr.sin_addr),
 			   ntohs(client_addr.sin_port));
 
-		char buffer[buffer_size];
+		// Receive filename length and filename
 		uint32_t filename_length;
-		uint64_t file_size;
-
-		// Receive filename length
-		ssize_t bytes_read = recv(client_socket, &filename_length, sizeof(filename_length), 0);
-		if (bytes_read != sizeof(filename_length))
-		{
-			perror("Error receiving filename length");
-			close(client_socket);
-			continue;
-		}
-
-		// Convert from network byte order
+		recv(client_socket, &filename_length, sizeof(filename_length), 0);
 		filename_length = ntohl(filename_length);
 
-		// Receive filename
-		char filename[256]; // Max filename length
-		if (filename_length > sizeof(filename) - 1)
-		{
-			fprintf(stderr, "Filename too long\n");
-			close(client_socket);
-			continue;
-		}
-
-		bytes_read = recv(client_socket, filename, filename_length, 0);
-		if (bytes_read != filename_length)
-		{
-			perror("Error receiving filename");
-			close(client_socket);
-			continue;
-		}
+		char filename[256];
+		recv(client_socket, filename, filename_length, 0);
 		filename[filename_length] = '\0';
 
 		// Receive file size
-		bytes_read = recv(client_socket, &file_size, sizeof(file_size), 0);
-		if (bytes_read != sizeof(file_size))
-		{
-			perror("Error receiving file size");
-			close(client_socket);
-			continue;
-		}
-
-		// Convert from network byte order
+		uint64_t file_size;
+		recv(client_socket, &file_size, sizeof(file_size), 0);
 		file_size = be64toh(file_size);
 
 		printf("Receiving file: %s (size: %lu bytes)\n", filename, file_size);
 
-		// Get unique filename
+		// Get unique filename and open file
 		char *unique_filename = get_unique_filename(filename);
-		if (unique_filename == NULL)
+		if (!unique_filename)
 		{
 			fprintf(stderr, "Could not create unique filename\n");
 			close(client_socket);
 			continue;
 		}
 
-		// Open file for writing
 		FILE *file = fopen(unique_filename, "wb");
-		if (file == NULL)
+		if (!file)
 		{
-			perror("Error opening file for writing");
+			perror("Error opening file");
 			free(unique_filename);
 			close(client_socket);
 			continue;
 		}
 
-		if (strcmp(unique_filename, filename) != 0)
+		// Start timing
+		struct timespec start_time, end_time;
+		clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+		// Receive file data
+		char buffer[buffer_size];
+		uint64_t total_received = 0;
+		int transfer_success = 1;
+
+		while (total_received < file_size)
 		{
-			printf("File already exists. Saving as: %s\n", unique_filename);
-		}
+			size_t to_receive = (file_size - total_received < buffer_size) ? file_size - total_received : buffer_size;
 
-		// Receive file contents in chunks
-		uint64_t total_bytes_received = 0;
-		ssize_t chunk_size;
-
-		while (total_bytes_received < file_size)
-		{
-			// Calculate remaining bytes to receive
-			size_t remaining = file_size - total_bytes_received;
-			size_t to_receive = (remaining < buffer_size) ? remaining : buffer_size;
-
-			// Receive chunk
-			chunk_size = recv(client_socket, buffer, to_receive, 0);
-			if (chunk_size <= 0)
+			ssize_t received = recv(client_socket, buffer, to_receive, 0);
+			if (received <= 0)
 			{
-				if (chunk_size == 0)
-				{
-					printf("Connection closed by client\n");
-				}
-				else
-				{
-					perror("Error receiving file data");
-				}
+				transfer_success = 0;
 				break;
 			}
 
-			// Write chunk to file
-			size_t written = fwrite(buffer, 1, chunk_size, file);
-			if (written != chunk_size)
+			if (fwrite(buffer, 1, received, file) != received)
 			{
-				perror("Error writing to file");
+				transfer_success = 0;
 				break;
 			}
 
-			total_bytes_received += chunk_size;
-
-			// Print progress
-			printf("\rReceived: %lu/%lu bytes (%.2f%%)",
-				   total_bytes_received, file_size,
-				   (float)total_bytes_received * 100 / file_size);
+			total_received += received;
+			printf("\rProgress: %.1f%%", (total_received * 100.0) / file_size);
 			fflush(stdout);
 		}
 
-		// Close the file
 		fclose(file);
 
-		// Print transfer summary
-		if (total_bytes_received == file_size)
+		// Calculate transfer statistics
+		if (transfer_success && total_received == file_size)
 		{
-			printf("\nTransfer complete!\n");
-			printf("Summary:\n");
-			printf("  Original filename: %s\n", filename);
-			printf("  Saved as: %s\n", unique_filename);
-			printf("  Size: %lu bytes\n", file_size);
-			printf("  Client IP: %s\n", inet_ntoa(client_addr.sin_addr));
-			printf("  Buffer size: %d bytes\n", buffer_size);
+			clock_gettime(CLOCK_MONOTONIC, &end_time);
+			double transfer_time =
+				(end_time.tv_sec - start_time.tv_sec) +
+				(end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+
+			if (transfer_time < 0.000001)
+				transfer_time = 0.000001;
+			double transfer_rate = (file_size / 1024.0) / transfer_time;
+
+			// After transfer completion:
+			printf("\nTransfer %s!\n", transfer_success ? "complete" : "failed");
+			if (transfer_success)
+			{
+				printf("Saved as: %s\n", unique_filename);
+				printf("Transfer time: %.6f seconds\n", transfer_time);
+				printf("Transfer rate: %.2f KB/s\n", transfer_rate);
+			}
+
+			// Add to statistics
+			add_transfer_stat(transfer_time, transfer_rate, file_size);
+
+			// Log transfer
+			FILE *log_file = fopen(LOG_FILE, "a");
+			if (log_file)
+			{
+				log_stats(log_file, transfer_time, transfer_rate,
+						  filename, file_size, unique_filename);
+
+				// If we've collected STATS_COUNT transfers, log summary
+				if (stats_count == STATS_COUNT)
+				{
+					log_transfer_summary(log_file);
+					stats_count = 0; // Reset counter after logging summary
+				}
+				fclose(log_file);
+			}
 		}
 		else
 		{
-			printf("\nTransfer incomplete! Received %lu/%lu bytes\n",
-				   total_bytes_received, file_size);
-			// Remove incomplete file
+			printf("\nTransfer failed!\n");
 			remove(unique_filename);
 		}
 
