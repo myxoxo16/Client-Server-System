@@ -11,10 +11,10 @@
 int main(int argc, char *argv[])
 {
     //Waiting for the filename, IP-address:port-number and bufSize
-    if (argc != 4) 
+    if (argc < 3 || argc > 4) 
     {
         //Print to user and quit
-        printf("Usage: %s <filename> <IP-address:port-number> <bufSize>\n", argv[0]);
+        printf("Usage: %s <filename> <IP-address:port-number> [bufSize]\n", argv[0]);
         return 1;
     }
 
@@ -23,7 +23,8 @@ int main(int argc, char *argv[])
     char *filename = argv[1];
     char *ip_port = argv[2];
     
-    int bufSize = atoi(argv[3]); 
+    //See if bufSize is given; if not, default to 4096
+    int bufSize = (argc == 4) ? atoi(argv[3]) : 4096;
 
     if (bufSize <= 0)
     {
