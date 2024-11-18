@@ -33,13 +33,13 @@ make clean  # Removes compiled files
 
 ### Client (sendFile)
 
-#### For testing smallTest.txt file without a buffer size (first line) and with a buffer size (second line) below:
+#### For testing smallTest.txt file without a buffer size (first line, default size as 4096) and with a buffer size (second line) below:
 
 ```
 ./sendFile smallTest.txt localhost:8080 
 ./sendFile smallTest.txt localhost:8080 4096
 ```
-#### For testing wonderland.txt file without a buffer size (first line) and with a buffer size (second line) below:
+#### For testing wonderland.txt file without a buffer size (first line, default size as 4096) and with a buffer size (second line) below:
 ``` 
 ./sendFile wonderland.txt 127.0.0.1:8080
 ./sendFile wonderland.txt 127.0.0.1:8080 4096
