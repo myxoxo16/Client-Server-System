@@ -1,4 +1,4 @@
-# CIS\*3210 Assignment 3
+# A Client-Server System
 
 A simple client-server system for transferring text files over TCP.
 
